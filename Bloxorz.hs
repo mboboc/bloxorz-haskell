@@ -72,7 +72,7 @@ instance Show Cell where
     Tip de date pentru reprezentarea nivelului curent
 -}
 
-data Level = Level Position Position (A.Array Position Cell)
+data Level = Level Position Position (A.Array Position Cell) (A.Array Position [Position])
     deriving (Eq, Ord)
 
 {-
@@ -100,9 +100,18 @@ data Level = Level Position Position (A.Array Position Cell)
     În cazul în care jocul este pierdut, se va mai concatena "Game Over\n". 
 -}
 
+--addBlock :: Level -> Level
+--addBlock (Level posColt (y,x) arr arrS) = Level posColt (y,x) (arr A.// [((x,y), B)]) arrS
+
+--addBlock :: Position->Position->A.Array Position Cell->A.Array Position [Position]
+--addBlock posColt (x1,y1) arr arrS = Level posColt (x1, y1) arr 
+
+addBlock :: Position->A.Array Position Cell->A.Array Position Cell
+addBlock (y,x) arr = arr A.// [((x,y), B)] 
+
 instance Show Level where
- show (Level (x,y) posBlock arr) = "\n" ++ m where
-  m = unlines [B.concat [show (arr A.! (i, j)) | i <- [0..x]] | j <- [0..y]]
+ show (Level (x,y) posBlock arr arrS) = "\n" ++ m where
+  m = unlines [B.concat [show ((addBlock posBlock arr) A.! (i, j)) | i <- [0..x]] | j <- [0..y]]
 
 {-
     *** TODO ***
@@ -112,12 +121,16 @@ instance Show Level where
     Implicit, colțul din stânga sus este (0, 0).
 -}
 
-makeMap :: Position->Position->A.Array Position Cell
-makeMap (x,y) (x1,y1) = a where
- a = A.array ((0,0),(x,y)) ([((i,j), E) | i <- [0..x], j <- [0..y]] ++ [((y1, x1), B)])
+makeMap :: Position->A.Array Position Cell
+makeMap (x,y) = a where
+ a = A.array ((0,0),(x,y)) [((i,j), E) | i <- [0..x], j <- [0..y]]
+
+makeArrS :: Position->A.Array Position [Position]
+makeArrS (x,y) = a where
+ a = A.array ((0,0), (x,y)) [((i,j), []) | i <- [0..x], j <- [0..y]]
 
 emptyLevel :: Position -> Position -> Level
-emptyLevel posColt posBlock = Level posColt posBlock (makeMap posColt posBlock)
+emptyLevel (x,y) posBlock = Level (y,x) posBlock (makeMap (y,x)) (makeArrS (y,x))
 
 {-
     Adaugă o celulă de tip Tile în nivelul curent.
@@ -128,11 +141,9 @@ emptyLevel posColt posBlock = Level posColt posBlock (makeMap posColt posBlock)
 -}
 
 addTile :: Char -> Position -> Level -> Level
-addTile t (x,y) (Level posColt (x1, y1) arr) 
-    | x == x1 && y == y1 =  Level posColt (x1, y1) arr 
-    | otherwise = Level posColt (x1, y1) (arr A.// [((y,x), c)]) where c | t == 'S' = S 
-                                                                         | t == 'H' = H
-                                                                         | t == 'W' = W
+addTile t (y,x) (Level posColt (x1, y1) arr arrS) = Level posColt (x1, y1) (arr A.// [((x,y), c)]) arrS where c | t == 'S' = S 
+                                                                                                                | t == 'H' = H
+                                                                                                                | t == 'W' = W
 {-
     *** TODO ***
 
@@ -144,7 +155,7 @@ addTile t (x,y) (Level posColt (x1, y1) arr)
 -}
 
 addSwitch :: Position -> [Position] -> Level -> Level
-addSwitch = undefined
+addSwitch (y,x) lst (Level posColt (x1, y1) arr arrS) = Level posColt (x1, y1) (arr A.// [((x,y), Sw)]) (arrS A.// [((x,y), lst)])
 
 {-
     === MOVEMENT ===
