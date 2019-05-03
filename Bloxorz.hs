@@ -72,7 +72,7 @@ instance Show Cell where
     Tip de date pentru reprezentarea nivelului curent
 -}
 
-data Level = Level Position Position (A.Array Position Cell) (A.Array Position [Position])
+data Level = Level Position  (Position, Position) (A.Array Position Cell) (A.Array Position [Position, Cell])
     deriving (Eq, Ord)
 
 {-
@@ -106,11 +106,13 @@ data Level = Level Position Position (A.Array Position Cell) (A.Array Position [
 --addBlock :: Position->Position->A.Array Position Cell->A.Array Position [Position]
 --addBlock posColt (x1,y1) arr arrS = Level posColt (x1, y1) arr 
 
-addBlock :: Position->A.Array Position Cell->A.Array Position Cell
-addBlock (y,x) arr = arr A.// [((x,y), B)] 
+addBlock :: (Position, Position)->A.Array Position Cell->A.Array Position Cell
+addBlock posBlock arr
+                   | fst (snd posBlock) == -1 && snd (snd posBlock) == -1 = arr A.// [(fst posBlock, B)]
+                   | otherwise = (arr A.// [((fst posBlock), B)]) A.// [((snd posBlock), B)]
 
 instance Show Level where
- show (Level (x,y) posBlock arr arrS) = "\n" ++ m where
+ show (Level (x, y) posBlock arr arrS) = "\n" ++ m where
   m = unlines [B.concat [show ((addBlock posBlock arr) A.! (i, j)) | i <- [0..x]] | j <- [0..y]]
 
 {-
@@ -130,18 +132,18 @@ makeArrS (x,y) = a where
  a = A.array ((0,0), (x,y)) [((i,j), []) | i <- [0..x], j <- [0..y]]
 
 emptyLevel :: Position -> Position -> Level
-emptyLevel (x,y) posBlock = Level (y,x) posBlock (makeMap (y,x)) (makeArrS (y,x))
+emptyLevel (x,y) (x1, y1) = Level (y,x) ((y1, x1), (-1, -1)) (makeMap (y,x)) (makeArrS (y,x))
 
 {-
     Adaugă o celulă de tip Tile în nivelul curent.
     Parametrul char descrie tipul de tile adăugat: 
-        'H' pentru tile hard 
-        'S' pentru tile soft 
-        'W' pentru winning tile 
+        'H' pentru tile hard
+        'S' pentru tile soft
+        'W' pentru winning tile
 -}
 
 addTile :: Char -> Position -> Level -> Level
-addTile t (y,x) (Level posColt (x1, y1) arr arrS) = Level posColt (x1, y1) (arr A.// [((x,y), c)]) arrS where c | t == 'S' = S 
+addTile t (y,x) (Level posColt posBlock arr arrS) = Level posColt posBlock (arr A.// [((x,y), c)]) arrS where c | t == 'S' = S 
                                                                                                                 | t == 'H' = H
                                                                                                                 | t == 'W' = W
 {-
@@ -154,8 +156,8 @@ addTile t (y,x) (Level posColt (x1, y1) arr arrS) = Level posColt (x1, y1) (arr 
     switch-ului.
 -}
 
-addSwitch :: Position -> [Position] -> Level -> Level
-addSwitch (y,x) lst (Level posColt (x1, y1) arr arrS) = Level posColt (x1, y1) (arr A.// [((x,y), Sw)]) (arrS A.// [((x,y), lst)])
+addSwitch :: Position -> [(Position, Cell)] -> Level -> Level
+addSwitch (y,x) lst (Level posColt (x1, y1) arr arrS) = Level posColt (x1, y1) (arr A.// [((x,y), Sw)]) (arrS A.// [(((x,y), E), lst)])
 
 {-
     === MOVEMENT ===
@@ -168,9 +170,12 @@ addSwitch (y,x) lst (Level posColt (x1, y1) arr arrS) = Level posColt (x1, y1) (
     În funcție de mecanica activată, vor avea loc modificări pe hartă. 
 -}
 
-activate :: Cell -> Level -> Level
-activate = undefined
+activate :: Position -> Level -> Level
+activate pos (Level posColt posBlock arr arrS) = 
 
+	Level posColt posBlock (foldl (\acc tilePos -> addTile tileType tilePos acc) (arrS A.! pos) arr) arrS 
+	where tileType
+			| arr A
 {-
     *** TODO ***
 
