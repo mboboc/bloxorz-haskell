@@ -1,1 +1,8 @@
 Nu stiu sa folosesc Data.Array. Nu am auzit in viata mea de el da bine ca am facut un lab cu random ... si cum sa scrii eficient in Haskell cand noi nu stim sa scriem Haskell in primul rand. 
+
+Levelul este format din pozitia blocului si harta. Harta este reprezentata in felul urmator:
+Avem o lista de tupluri de tip position si cell. Am ales ca in loc sa folosesc position simplu sa fac o lista de positions. Primul element este blocul propriu zis iar urmatoarele sunt blocurile care se activeaza daca apesi pe acel block. Implicit, doar blocurile de tip Sw (switch) vor avea o lista cu mai mult de un element.s
+
+Nu merge ca mai sus pentru ca e ca o matrice si position e coordonata, nu pot sa fac vector de position.
+
+Levelul este format din perechi position si tuplu Cell si lista de Positions. Daca blocul e de tip switch, lista nu o sa fie goala.
