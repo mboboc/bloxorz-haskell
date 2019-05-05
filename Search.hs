@@ -13,7 +13,7 @@ import qualified Data.Set as S
     Tipul unei nod utilizat în procesul de căutare. Recomandăm reținerea unor
     informații legate de:
 
-    * stare;
+    * stare;s
     * acțiunea care a condus la această stare;
     * nodul părinte, prin explorarea căruia a fost obținut nodul curent;
     * adâncime
@@ -23,9 +23,8 @@ import qualified Data.Set as S
 data Node s a = Node { state :: s
                      , action :: Maybe a
                      , parent :: Maybe (Node s a)
-                     , children :: (Maybe [(s, a)])
+                     , children :: ([(a, s)])
                      } deriving (Show)
-
 
 nodeState :: Node s a -> s
 nodeState Node { state = s
@@ -43,7 +42,7 @@ nodeState Node { state = s
 -}
 
 createStateSpace :: (ProblemState s a) => s -> Node s a
-createStateSpace s = (Node {state = s, action = Nothing, parent = Nothing, children = Nothing})
+createStateSpace s = (Node {state = s, action = Nothing, parent = Nothing, children = (successors s)})
 
 {-
     *** TODO PENTRU BONUS ***
@@ -66,11 +65,15 @@ orderStateSpace = undefined
     `Ord s` permite utilizarea tipului `Set`.
 -}
 
+helper :: (ProblemState s a, Ord s) => Node s a -> [Node s a]
+helper node = (map (\(x1, y1) -> (Node {state = y1, action = Just x1, parent = (Just node), children = (successors y1)})) (successors (nodeState node)))
+
 limitedDfs :: (ProblemState s a, Ord s)
            => Node s a    -- Nodul stării inițiale
            -> Int         -- Adâncimea maximă de explorare
            -> [Node s a]  -- Lista de noduri
-limitedDfs = undefined
+limitedDfs node (-1) = []
+limitedDfs node h = [node] ++ (concat (map ((flip limitedDfs) (h-1)) (helper node)))   
 
 {-
     *** TODO ***
