@@ -26,12 +26,14 @@ data Node s a = Node { state :: s
                      , children :: ([(a, s)])
                      } deriving (Show)
 
+instance Eq s => Eq (Node s a) where
+ node1 == node2 = ((state node1) == (state node2))
+
+instance Ord s => Ord (Node s a) where
+ node1 <= node2 = ((state node1) <= (state node2))
+
 nodeState :: Node s a -> s
-nodeState Node { state = s
-               , action = a
-               , parent = p
-               , children = c
-               } = s
+nodeState node = state node
 
 {-
     *** TODO ***
@@ -65,6 +67,15 @@ orderStateSpace = undefined
     `Ord s` permite utilizarea tipului `Set`.
 -}
 
+myflip :: (a1 -> a2 -> a3 -> r) -> a3 -> a2 -> a1 -> r
+myflip f x1 x2 x3 = f x3 x2 x1
+ 
+
+limitedTailRecursive :: (ProblemState s a, Ord s) => Ord s => Node s a -> Int -> (S.Set (Node s a)) -> [Node s a]
+limitedTailRecursive node (-1) seet = []
+limitedTailRecursive node h seet | (S.member node seet) == True = [] ++ (concat (map ((myflip limitedTailRecursive) seet (h-1)) (helper node)))
+                                 | otherwise = [node] ++ (concat (map ((myflip limitedTailRecursive) (S.insert node seet) (h-1)) (helper node)))
+
 helper :: (ProblemState s a, Ord s) => Node s a -> [Node s a]
 helper node = (map (\(x1, y1) -> (Node {state = y1, action = Just x1, parent = (Just node), children = (successors y1)})) (successors (nodeState node)))
 
@@ -73,7 +84,7 @@ limitedDfs :: (ProblemState s a, Ord s)
            -> Int         -- Adâncimea maximă de explorare
            -> [Node s a]  -- Lista de noduri
 limitedDfs node (-1) = []
-limitedDfs node h = [node] ++ (concat (map ((flip limitedDfs) (h-1)) (helper node)))   
+limitedDfs node h = (limitedTailRecursive node h S.empty)
 
 {-
     *** TODO ***
