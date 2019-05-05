@@ -65,10 +65,7 @@ addTile t (x,y) (Level posColt (x1, y1) arr)
 	| x == x1 && y == y1 =  Level posColt (x1, y1) arr 
 	| otherwise = Level posColt (x1, y1) (arr A.// [((y,x), c)]) where c | t == 'S' = S 
   																		 | t == 'H' = H
-  																		 | t == 'W' = W
- 	
-
-                        
+  																		 | t == 'W' = W                     
 wavefront       :: Int -> A.Array (Int,Int) Int
 wavefront n     =  a  where
                    a = A.array ((1,1),(n,n))
@@ -77,6 +74,14 @@ wavefront n     =  a  where
                          [((i,j), a A.! (i,j-1) + a A.! (i-1,j-1) + a A.! (i-1,j))
                                      | i <- [2..n], j <- [2..n]])
 
+successors a1 b1 c1 d1 = [] ++ a ++ b ++ c ++ d where a | a1 == 1 = [1]
+                                                        | otherwise = []
+                                                      b | b1 == 2 = [2]
+                                                        | otherwise = []
+                                                      c | c1 == 3 = [3]
+                                                        | otherwise = []
+                                                      d | d1 == 4 = [4]
+                                                        | otherwise = []
 
 --squares = Level (1,100) [(i, i*i) | i <- [1..100]]
 

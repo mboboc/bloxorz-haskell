@@ -20,16 +20,19 @@ import qualified Data.Set as S
     * copiii, ce vor desemna stările învecinate
 -}
 
-data Node s a = UndefinedNode
+data Node s a = Node { state :: s
+                     , action :: Maybe a
+                     , parent :: Maybe (Node s a)
+                     , children :: (Maybe [(s, a)])
+                     } deriving (Show)
 
-{-
-    *** TODO ***
-
-    Întoarce starea stocată într-un nod.
--}
 
 nodeState :: Node s a -> s
-nodeState = undefined
+nodeState Node { state = s
+               , action = a
+               , parent = p
+               , children = c
+               } = s
 
 {-
     *** TODO ***
@@ -40,7 +43,7 @@ nodeState = undefined
 -}
 
 createStateSpace :: (ProblemState s a) => s -> Node s a
-createStateSpace = undefined
+createStateSpace s = (Node {state = s, action = Nothing, parent = Nothing, children = Nothing})
 
 {-
     *** TODO PENTRU BONUS ***

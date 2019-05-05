@@ -71,9 +71,7 @@ addBlock (p1, p2) arr
                    | otherwise = (arr A.// [(p1, B)]) A.// [(p2, B)]
 instance Show Level where
  show (Level start (x,y) (p1,p2) arr) = "\n" ++ m where
-  m = unlines [B.concat [show ((addBlock (p1,p2) arr) A.! (i, j)) | i <- [0..x]] | j <- [0..y]] ++ message where message | continueGame (Level start (x,y) (p1,p2) arr) == False && start == True = "Game Over\n"
-                                                                                                                         | p1 == p2 && (arr A.! p1) == W = "Congrats! You won!\n"
-                                                                                                                         | otherwise = ""
+  m = unlines [B.concat [show ((addBlock (p1,p2) arr) A.! (i, j)) | i <- [0..x]] | j <- [0..y]] ++ message where message | continueGame (Level start (x,y) (p1,p2) arr) == False && start == True = "Game Over\n"                                                                                                                       | p1 == p2 && (arr A.! p1) == W = "Congrats! You won!\n"                                                                                                                 | otherwise = ""
 
 makeMap :: Position->A.Array Position Cell
 makeMap (x,y) = a where
@@ -83,8 +81,7 @@ emptyLevel :: Position -> Position -> Level
 emptyLevel (x,y) (y1,x1) = Level False (y,x) ((x1, y1), (x1, y1)) (makeMap (y,x))
 
 addTile :: Char -> Position -> Level -> Level
-addTile t (y,x) (Level start posColt posBlock arr) = Level False posColt posBlock (arr A.// [((x,y), c)]) where c   | t == 'S' = S 
-                                                                                                                    | t == 'H' = H
+addTile t (y,x) (Level start posColt posBlock arr) = Level False posColt posBlock (arr A.// [((x,y), c)]) where c   | t == 'S' = S                                                                                                                  | t == 'H' = H
                                                                                                                     | t == 'W' = W
 addSwitch :: Position -> [Position] -> Level -> Level
 addSwitch (y,x) lst (Level start posColt posBlock arr) = Level False posColt posBlock (arr A.// [((x,y), (Sw lst))])
@@ -96,11 +93,6 @@ activate :: Cell -> Level -> Level
 activate (Sw a) (Level start posColt posBlock arr) | (arr A.! (inv (a !! 0))) == E = Level start posColt posBlock (foldl (\x (x1, y1) -> x A.// [((y1,x1), H)]) arr a)
                                                    | otherwise = Level start posColt posBlock (foldl (\x (x1,y1) -> x A.// [((y1,x1), E)]) arr a)
 activate _ lvl = lvl
-{-
-    *** TODO ***
-    Mișcarea blocului în una din cele 4 direcții 
-    Hint: Dacă jocul este deja câștigat sau pierdut, puteți lăsa nivelul neschimbat.
--}
 
 move :: Directions -> Level -> Level
 move South (Level start posColt ((x,y), (x1,y1)) arr)   | x == x1 && y == y1 = activate (arr A.! (x1, y1 + 2)) (activate (arr A.! (x,y + 1)) (Level True posColt ((x,y + 1), (x1, y1 + 2)) arr))
@@ -123,30 +115,23 @@ move East (Level start posColt ((x,y), (x1,y1)) arr)    | x == x1 && y == y1 = a
                                                             lvl | x == x1 = activate (arr A.! (x1 + 1, y1)) (activate (arr A.! (x + 1, y)) (Level True posColt ((x + 1,y), (x1 + 1, y1)) arr))
                                                                 | y == y1 = activate (arr A.! (x1 + 1, y1)) (Level True posColt ((x1 + 1, y1), (x1 + 1, y1)) arr)
 
-{-
-    *** TODO ***
-    Va returna True dacă jocul nu este nici câștigat, nici pierdut.
-    Este folosită în cadrul Interactive.
--}
-
+-- returneaza True daca jocul nu este nici castigat nici pierdut
 continueGame :: Level -> Bool
 continueGame (Level start posColt (p1, p2) arr) | p1 == p2 && (arr A.! p1) == S = False
-                                          | (arr A.! p1) == E || (arr A.! p2) == E = False
-                                          | otherwise = True 
-
-{-
-    *** TODO ***
-    Instanțiați clasa `ProblemState` pentru jocul nostru. 
-  
-    Hint: Un level câștigat nu are succesori! 
-    De asemenea, puteți ignora succesorii care 
-    duc la pierderea unui level.
--}
+                                                | (arr A.! p1) == E || (arr A.! p2) == E = False
+                                                | otherwise = True 
 
 instance ProblemState Level Directions where
-    successors = undefined
-
-    isGoal = undefined
+    successors lvl = [] ++ a ++ b ++ c ++ d where a | continueGame (move North lvl) == True = [(North, (move North lvl))]
+                                                    | otherwise = []
+                                                  b | continueGame (move South lvl) == True = [(South, (move South lvl))]
+                                                    | otherwise = []
+                                                  c | continueGame (move East lvl) == True = [(East, (move East lvl))]
+                                                    | otherwise = []
+                                                  d | continueGame (move West lvl) == True = [(West, (move West lvl))]
+                                                    | otherwise = []
+    isGoal (Level start posColt (p1, p2) arr) | p1 == p2 && (arr A.! p1) == W = True
+                                              | otherwise = False
 
     -- Doar petru BONUS
     -- heuristic = undefined
