@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall #-}
+{{-# OPTIONS_GHC -Wall #-}
 {-# LANGUAGE EmptyDataDecls, MultiParamTypeClasses,
              TypeSynonymInstances, FlexibleInstances,
              InstanceSigs #-}
@@ -62,10 +62,10 @@ emptyLevel posColt posBlock = Level posColt posBlock (makeMap posColt posBlock)
 
 addTile :: Char -> Position -> Level -> Level
 addTile t (x,y) (Level posColt (x1, y1) arr) 
-	| x == x1 && y == y1 =  Level posColt (x1, y1) arr 
-	| otherwise = Level posColt (x1, y1) (arr A.// [((y,x), c)]) where c | t == 'S' = S 
-  																		 | t == 'H' = H
-  																		 | t == 'W' = W                     
+  | x == x1 && y == y1 =  Level posColt (x1, y1) arr 
+  | otherwise = Level posColt (x1, y1) (arr A.// [((y,x), c)]) where c | t == 'S' = S 
+                                       | t == 'H' = H
+                                       | t == 'W' = W                     
 wavefront       :: Int -> A.Array (Int,Int) Int
 wavefront n     =  a  where
                    a = A.array ((1,1),(n,n))
@@ -82,11 +82,33 @@ successors a1 b1 c1 d1 = [] ++ a ++ b ++ c ++ d where a | a1 == 1 = [1]
                                                         | otherwise = []
                                                       d | d1 == 4 = [4]
                                                         | otherwise = []
+myflip :: (a1 -> a2 -> a3 -> r) -> a3 -> a2 -> a1 -> r
+myflip f x1 x2 x3 = f x3 x2 x1
+
+isElem :: (Eq s) => [(Node s a)] -> (Node s a) -> Bool
+isElem [] node = False
+isElem (x:xs) node | (state node) == (state x) = True
+                   | otherwise = (isElem xs node)
+ 
+limitedTailRecursive :: (ProblemState s a, Ord s) => Node s a -> Int -> [(Node s a)] -> [(Node s a)]
+limitedTailRecursive node (-1) seet = []
+limitedTailRecursive node h seet | (isElem seet node) == True = [] ++ (concat (map ((myflip limitedTailRecursive) seet (h-1)) (helper node)))
+                                 | otherwise = [node] ++ (concat (map ((myflip limitedTailRecursive) ([node] ++ seet) (h-1)) (helper node)))
+
+helper :: (ProblemState s a, Ord s) => Node s a -> [Node s a]
+helper node = (map (\(x1, y1) -> (Node {state = y1, action = Just x1, parent = (Just node), children = (successors y1)})) (successors (nodeState node)))
+
+limitedDfs :: (ProblemState s a, Ord s)
+           => Node s a    -- Nodul stării inițiale
+           -> Int         -- Adâncimea maximă de explorare
+           -> [Node s a]  -- Lista de noduri
+limitedDfs node (-1) = []
+limitedDfs node h = (limitedTailRecursive node h [])
 
 --squares = Level (1,100) [(i, i*i) | i <- [1..100]]
 
 --instance Show Level where
-	--show Level = elems Level
-	--}
-
+  --show Level = elems Level
+  --}
+}
      
